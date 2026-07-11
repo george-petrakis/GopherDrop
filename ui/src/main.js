@@ -21,7 +21,7 @@ const customLightTheme = {
   colors: {
     primary: '#6750A4', // A modern purple
     secondary: '#E8DEF8', // A light, complementary purple
-    background: '#FFFFFF',
+    background: '#FBFAFE',
     surface: '#FEF7FF', // Off-white for cards and surfaces
     info: '#6750A4', // Using primary color for info state for consistency
     error: '#B3261E',

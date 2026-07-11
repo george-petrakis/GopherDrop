@@ -5,19 +5,35 @@
     :model-value="modelValue"
     @update:modelValue="$emit('update:modelValue', $event)"
     variant="outlined"
+    density="comfortable"
     prepend-inner-icon="mdi-lock"
   >
     <template v-slot:append-inner>
       <v-tooltip text="Toggle Password Visibility">
         <template v-slot:activator="{ props }">
-          <v-btn icon v-bind="props" @click="showPassword = !showPassword" size="small">
+          <v-btn
+            variant="text"
+            icon
+            v-bind="props"
+            @click="showPassword = !showPassword"
+            size="small"
+            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+          >
             <v-icon>{{ showPassword ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
           </v-btn>
         </template>
       </v-tooltip>
       <v-tooltip text="Generate Random Password">
         <template v-slot:activator="{ props }">
-          <v-btn icon color="primary" v-bind="props" @click="generateNewPassword" size="small" style="margin-left: 4px">
+          <v-btn
+            variant="text"
+            icon
+            v-bind="props"
+            @click="generateNewPassword"
+            size="small"
+            style="margin-left: 4px"
+            aria-label="Generate random password"
+          >
             <v-icon>mdi-refresh</v-icon>
           </v-btn>
         </template>

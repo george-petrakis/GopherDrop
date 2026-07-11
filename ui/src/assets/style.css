@@ -6,19 +6,20 @@ html, body {
     margin: 0;
     padding: 0;
     font-family: "Inter Variable", Inter, Arial, sans-serif;
-    color: #333;
-    background: #f4f4f9; /* Fallback background */
 }
 
-/* Add a subtle gradient background */
-body {
-    background: linear-gradient(180deg, rgba(232,222,248,0.3) 0%, rgba(255,255,255,1) 30%);
-}
-
+/* Let Vuetify's theme drive the ground color (so dark mode gets a dark
+   background instead of being forced transparent onto a light body), and
+   layer a non-interactive radial wash on top of it. Both are painted directly
+   on .v-application — a negative-z-index ::before would render *behind*
+   Vuetify's own opaque .v-application background and never show. Driven by
+   theme tokens, so it flips automatically with light/dark. */
 .v-application {
-    background: transparent !important;
+    background:
+        radial-gradient(1100px 480px at 18% -12%, rgba(var(--v-theme-primary), 0.06), transparent 60%),
+        rgb(var(--v-theme-background)) !important;
+    background-attachment: fixed;
 }
-
 
 a {
     color: #6750A4; /* Using the new primary color */
@@ -56,19 +57,6 @@ a:hover {
     to { opacity: 1; }
 }
 
-@keyframes gd-pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-@keyframes gd-bounceIn {
-    0% { opacity: 0; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.03); }
-    70% { transform: scale(0.98); }
-    100% { transform: scale(1); }
-}
-
 .animate__animated {
     animation-duration: .8s;
     animation-fill-mode: both;
@@ -78,12 +66,14 @@ a:hover {
     animation-name: gd-fadeIn;
 }
 
-.animate__pulse {
-    animation-name: gd-pulse;
-}
-
-.animate__bounceIn {
-    animation-name: gd-bounceIn;
+/* Eyebrow label style shared by the ledger and the create form, so both
+   speak the same visual language. */
+.gd-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 /* Local motion keyframes for the revamp */
