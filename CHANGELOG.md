@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0]
+
+### Changed
+- **Headerless, "straight to the point" landing page.** Removed the top app-bar entirely; brand wordmark and theme toggle now live in a quiet, borderless utility line that renders on every page.
+- **Seamless create form.** The floating elevated card is gone — the form is now set directly into the page as one continuous "sheet" alongside the stats ledger, joined by a single hairline divider. New "Drop a secret." hero, grouped fields under shared eyebrow labels, a compact Text/File switch, a tinted secret well, "Delete after first view" toggle, and an integrated "receipt" success panel.
+- File mode now accepts **drag-and-drop** onto the well (previously the "drop it here" label was decorative).
+
+### Fixed
+- **Dark mode now paints a dark ground.** Previously the global stylesheet forced `.v-application { background: transparent !important }` over a hard-coded light gradient, so the dark theme's background never actually applied. The page now uses the Vuetify theme background token with a theme-aware radial wash, and the mobile browser chrome color (`theme-color`) tracks the active theme.
+
 ## [1.1.0]
 
 ### Added

@@ -9,7 +9,7 @@
   </div>
 
   <div v-else-if="stats" class="server-ledger gd-fade-in">
-    <div class="server-ledger__eyebrow font-display">THIS SERVER</div>
+    <div class="server-ledger__eyebrow gd-eyebrow">THIS SERVER</div>
 
     <StatTile
       class="server-ledger__hero"
@@ -141,11 +141,13 @@ defineExpose({ tick });
 }
 
 .server-ledger__eyebrow {
-  font-size: 0.75rem;
+  /* Matches the shared .gd-eyebrow spec so this label speaks the same
+     language as StatTile's own eyebrows and the page H1's utility line. */
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(var(--v-theme-on-surface), 0.55);
+  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .server-ledger__divider {
@@ -163,6 +165,8 @@ defineExpose({ tick });
 }
 
 .server-ledger__hero :deep(.stat-tile__value) {
+  /* Sit below the new page H1 in the visual hierarchy (was 3rem). */
+  font-size: 2.5rem;
   transition: text-shadow 0.4s ease, color 0.4s ease;
 }
 
