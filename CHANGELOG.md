@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0]
+
+### Added
+- **Gamified server stats dashboard** on the landing page — a live "server ledger" beside the create form showing lifetime KPIs (Secrets Delivered, Text Secrets, Files Shared, Data Encrypted) and a live "Held right now" count.
+  - The hero "Secrets delivered" figure **ticks +1 with a count-up animation** the moment you create a secret.
+  - A 30-day stacked activity chart (text vs. file), a text/file split bar, and a milestone progress meter — all hand-rolled inline SVG (no charting-library dependency, keeps the bundle lean).
+- New public, aggregate-only **`GET /stats`** endpoint (30s in-memory cache, no per-secret data ever exposed). Toggle with the `STATS_ENABLED` env var (default `true`).
+- Lifetime counters (`stat_counters`) and per-day activity (`stat_days`) tables. Counters are **monotonic**: incremented at creation and never decremented by expiry or one-time retrieval, so totals are honest despite secrets being ephemeral. A `since` timestamp keeps the "lifetime" figure honest on pre-existing installs.
+
+### Changed
+- Modernized the landing page: new "Share secrets that vanish." hero, refined two-column layout (form + ledger), Space Grotesk display type, and a tasteful, `prefers-reduced-motion`-aware motion budget.
+- Extracted the post-create success panel into a reusable `SecretResult` component.
+- Send creation now verifies the database write succeeded before returning a link (previously the insert error was ignored).
+
+### Privacy
+- **Removed all third-party CDN requests on page load.** Inter and Space Grotesk fonts are now self-hosted via `@fontsource`, and the `animate.css` CDN link was dropped (its handful of animations are re-implemented locally). A privacy tool no longer phones home.
+
 ## [10.0.10]
 
 ### Added

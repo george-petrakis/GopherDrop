@@ -47,5 +47,11 @@ func SetupRouter(cfg config.Config, db *gorm.DB) *gin.Engine {
 	r.GET("/send/:id", handlers.GetSend(cfg, db))
 	r.GET("/send/:id/check", handlers.CheckPasswordProtection(db))
 
+	// Public, cached, aggregate-only stats endpoint. No rate limiter needed
+	// since responses are served from an in-memory cache.
+	if cfg.StatsEnabled {
+		r.GET("/stats", handlers.GetStats(db))
+	}
+
 	return r
 }

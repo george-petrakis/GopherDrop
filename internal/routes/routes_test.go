@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -27,6 +28,13 @@ func setupTestDB() *gorm.DB {
 	if err := db.AutoMigrate(&models.Send{}).Error; err != nil {
 		panic("Failed to migrate database: " + err.Error())
 	}
+	if err := db.AutoMigrate(&models.StatCounters{}).Error; err != nil {
+		panic("Failed to migrate database: " + err.Error())
+	}
+	if err := db.AutoMigrate(&models.StatDay{}).Error; err != nil {
+		panic("Failed to migrate database: " + err.Error())
+	}
+	db.Create(&models.StatCounters{ID: 1, Since: time.Now()})
 
 	// Insert a test record
 	send := models.Send{
@@ -45,8 +53,9 @@ func setupTestDB() *gorm.DB {
 func setupTestRouter() *gin.Engine {
 	limiter = rate.NewLimiter(1, 6)
 	cfg := config.Config{
-		SecretKey:   "supersecretkey",
-		MaxFileSize: 1024 * 1024,
+		SecretKey:    "supersecretkey",
+		MaxFileSize:  1024 * 1024,
+		StatsEnabled: true,
 	}
 	db := setupTestDB()
 	return SetupRouter(cfg, db)
@@ -66,6 +75,7 @@ func TestRoutesExist(t *testing.T) {
 		{"POST", "/send/file", "test file payload", http.StatusBadRequest},
 		{"GET", "/send/testhash", "", http.StatusNotFound},
 		{"GET", "/send/testhash/check", "", http.StatusNotFound},
+		{"GET", "/stats", "", http.StatusOK},
 	}
 
 	for _, tt := range tests {
@@ -129,4 +139,47 @@ func TestRateLimiter(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusTooManyRequests, w.Code, "7th request should be rate limited")
+}
+
+func TestStatsRouteDisabledWhenConfigured(t *testing.T) {
+	limiter = rate.NewLimiter(1, 6)
+	cfg := config.Config{
+		SecretKey:    "supersecretkey",
+		MaxFileSize:  1024 * 1024,
+		StatsEnabled: false,
+	}
+	db := setupTestDB()
+	router := SetupRouter(cfg, db)
+
+	req := httptest.NewRequest("GET", "/stats", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code, "/stats should not be registered when StatsEnabled is false")
+}
+
+func TestStatsEndpointShape(t *testing.T) {
+	router := setupTestRouter()
+
+	req := httptest.NewRequest("GET", "/stats", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var body map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("failed to parse /stats response: %v", err)
+	}
+
+	assert.Contains(t, body, "lifetime")
+	assert.Contains(t, body, "active")
+	assert.Contains(t, body, "daily")
+	assert.Contains(t, body, "since")
+
+	daily, ok := body["daily"].([]interface{})
+	if !ok {
+		t.Fatalf("expected daily to be an array")
+	}
+	assert.Equal(t, 30, len(daily), "expected exactly 30 daily entries")
 }

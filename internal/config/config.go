@@ -4,19 +4,21 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config holds all environment-based configuration.
 type Config struct {
-	DBHost      string
-	DBUser      string
-	DBPass      string
-	DBName      string
-	DBSSLMode   string
-	SecretKey   string
-	ListenAddr  string
-	StoragePath string
-	MaxFileSize int64
+	DBHost       string
+	DBUser       string
+	DBPass       string
+	DBName       string
+	DBSSLMode    string
+	SecretKey    string
+	ListenAddr   string
+	StoragePath  string
+	MaxFileSize  int64
+	StatsEnabled bool
 }
 
 // LoadConfig returns a Config object populated from environment variables.
@@ -51,6 +53,9 @@ func LoadConfig() Config {
 			cfg.MaxFileSize = size
 		}
 	}
+
+	statsEnabledStr := strings.ToLower(strings.TrimSpace(os.Getenv("STATS_ENABLED")))
+	cfg.StatsEnabled = statsEnabledStr != "false" && statsEnabledStr != "0"
 
 	return cfg
 }

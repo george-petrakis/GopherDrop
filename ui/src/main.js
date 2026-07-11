@@ -2,6 +2,10 @@
  * Main application entry point.
  * Initializes Vue, Vuetify, and the Router.
  */
+import "@fontsource-variable/inter";
+import "@fontsource-variable/space-grotesk";
+import "./assets/style.css";
+
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
@@ -23,6 +27,8 @@ const customLightTheme = {
     error: '#B3261E',
     success: '#4CAF50',
     warning: '#FB8C00',
+    'chart-text': '#6750A4',
+    'chart-file': '#00897B',
   }
 };
 
@@ -38,6 +44,8 @@ const customDarkTheme = {
     error: '#F2B8B5',
     success: '#B7F3B9',
     warning: '#FFD6A8',
+    'chart-text': '#9A79DC',
+    'chart-file': '#22A896',
   }
 }
 

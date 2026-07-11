@@ -7,6 +7,8 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@fontsource-variable/inter": "^5.1.0",
+        "@fontsource-variable/space-grotesk": "^5.0.0",
         "@mdi/font": "^7.4.47",
         "vite-plugin-vuetify": "^1.0.1",
         "vue": "^3.3.4",

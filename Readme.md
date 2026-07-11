@@ -128,6 +128,7 @@ MAX_FILE_SIZE=10485760
 | `LISTEN_ADDR`    | API listen address              | `:8080`                             |
 | `STORAGE_PATH`   | Path for storing uploaded files | `/app/storage`                      |
 | `MAX_FILE_SIZE`  | Maximum file size in bytes      | `10485760` (10 MB)                  |
+| `STATS_ENABLED`  | Expose the public `/stats` endpoint and landing-page stats dashboard | `true`         |
 
 ### **Build Arguments**
 
@@ -153,6 +154,7 @@ MAX_FILE_SIZE=10485760
 | `POST` | `/send/file`       | Create a file send (curl-friendly)       |
 | `GET`  | `/send/:id`        | Retrieve a send by its hash              |
 | `GET`  | `/send/:id/check`  | Check if a send requires a password      |
+| `GET`  | `/stats`           | Public aggregate stats (no per-secret data); disable via `STATS_ENABLED=false` |
 
 ### **curl Examples**
 
