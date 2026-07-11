@@ -1,12 +1,11 @@
 /**
  * Global styles for responsive and clean layout.
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
 html, body {
     margin: 0;
     padding: 0;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: "Inter Variable", Inter, Arial, sans-serif;
     color: #333;
     background: #f4f4f9; /* Fallback background */
 }
@@ -34,5 +33,82 @@ a:hover {
 @media (max-width: 600px) {
     main, header {
       padding: 0.5rem;
+    }
+}
+
+/* Display / headline typeface for headlines, eyebrows, hero figures */
+.font-display {
+    font-family: "Space Grotesk Variable", "Space Grotesk", sans-serif;
+}
+
+/* Tabular figures for aligned numeric columns */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Local re-implementation of the handful of animate.css classes the app
+ * uses, so pages keep working without loading the CDN (privacy: no
+ * external requests on page load).
+ */
+@keyframes gd-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes gd-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes gd-bounceIn {
+    0% { opacity: 0; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.03); }
+    70% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+.animate__animated {
+    animation-duration: .8s;
+    animation-fill-mode: both;
+}
+
+.animate__fadeIn {
+    animation-name: gd-fadeIn;
+}
+
+.animate__pulse {
+    animation-name: gd-pulse;
+}
+
+.animate__bounceIn {
+    animation-name: gd-bounceIn;
+}
+
+/* Local motion keyframes for the revamp */
+@keyframes gd-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gd-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.gd-rise {
+    animation: gd-rise 300ms ease-out both;
+}
+
+.gd-fade-in {
+    animation: gd-fade-in 300ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate__animated,
+    .gd-rise,
+    .gd-fade-in {
+        animation: none !important;
     }
 }

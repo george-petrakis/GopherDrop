@@ -120,7 +120,12 @@ func createSendWithType(cfg config.Config, db *gorm.DB, forcedType string) gin.H
 				OneTime:   oneTime,
 				ExpiresAt: expiresAt,
 			}
-			db.Create(&s)
+			if err := db.Create(&s).Error; err != nil {
+				log.Println("Error saving text send:", err)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to save send"})
+				return
+			}
+			recordSendStats(db, "text", int64(len(text)))
 			log.Println("Text send created successfully with hash:", hash)
 			c.JSON(http.StatusOK, gin.H{"hash": s.Hash})
 			return
@@ -176,7 +181,12 @@ func createSendWithType(cfg config.Config, db *gorm.DB, forcedType string) gin.H
 				OneTime:   oneTime,
 				ExpiresAt: expiresAt,
 			}
-			db.Create(&s)
+			if err := db.Create(&s).Error; err != nil {
+				log.Println("Error saving file send:", err)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to save send"})
+				return
+			}
+			recordSendStats(db, "file", int64(len(fileData)))
 			log.Println("File send created successfully with hash:", hash)
 			c.JSON(http.StatusOK, gin.H{"hash": s.Hash})
 			return

@@ -101,3 +101,24 @@ export async function checkPasswordProtection(hash) {
 
   return res.json();
 }
+
+/**
+ * Fetches server-wide aggregate stats for the "server ledger" UI.
+ * Degrades silently: any non-ok status, a 404, or a network error
+ * resolves to null so the UI never depends on stats being available.
+ * @returns {Promise<object|null>} The parsed stats JSON, or null.
+ */
+export async function getStats() {
+  try {
+    const res = await fetch(`${API_URL}/stats`);
+
+    if (!res.ok) {
+      return null;
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch stats:', err);
+    return null;
+  }
+}

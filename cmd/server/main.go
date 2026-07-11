@@ -24,6 +24,17 @@ func main() {
 	// Initialize database
 	db := database.InitDB(cfg)
 	db.AutoMigrate(&models.Send{})
+	db.AutoMigrate(&models.StatCounters{})
+	db.AutoMigrate(&models.StatDay{})
+
+	// Seed the lifetime stat counters row if it doesn't exist yet. This row
+	// is the single source of truth for the "since" timestamp reported by
+	// GET /stats, and must never be deleted or decremented.
+	var counters models.StatCounters
+	if db.Where("id = ?", 1).First(&counters).RecordNotFound() {
+		db.Create(&models.StatCounters{ID: 1, Since: time.Now()})
+	}
+
 	go database.CleanupExpired(db)
 
 	// Setup router
