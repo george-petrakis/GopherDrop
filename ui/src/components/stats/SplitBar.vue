@@ -1,8 +1,18 @@
 <template>
   <div class="split-bar">
     <div class="split-bar__labels">
-      <span class="split-bar__label">Text {{ textPercent }}%</span>
-      <span class="split-bar__label">Files {{ filePercent }}%</span>
+      <span class="split-bar__label">
+        <span class="split-bar__dot split-bar__dot--text" aria-hidden="true"></span>
+        Text
+        <span class="split-bar__count">{{ compactNumber(texts) }}</span>
+        <span class="split-bar__pct">{{ textPercent }}%</span>
+      </span>
+      <span class="split-bar__label">
+        <span class="split-bar__pct">{{ filePercent }}%</span>
+        <span class="split-bar__count">{{ compactNumber(files) }}</span>
+        Files
+        <span class="split-bar__dot split-bar__dot--file" aria-hidden="true"></span>
+      </span>
     </div>
 
     <svg
@@ -12,6 +22,17 @@
       role="img"
       :aria-label="`Text ${textPercent}%, Files ${filePercent}%`"
     >
+      <defs>
+        <linearGradient id="split-bar-grad-text" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="split-bar__grad-text-top" />
+          <stop offset="1" class="split-bar__grad-text-bot" />
+        </linearGradient>
+        <linearGradient id="split-bar-grad-file" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="split-bar__grad-file-top" />
+          <stop offset="1" class="split-bar__grad-file-bot" />
+        </linearGradient>
+      </defs>
+
       <rect
         v-if="total === 0"
         x="0"
@@ -21,7 +42,7 @@
         rx="6"
         class="split-bar__track"
       />
-      <template v-else>
+      <g v-else class="split-bar__fill">
         <path
           v-if="textWidth > 0"
           :d="textPath"
@@ -32,13 +53,14 @@
           :d="filePath"
           class="split-bar__seg split-bar__seg--file"
         />
-      </template>
+      </g>
     </svg>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import { compactNumber } from '../../utils/format.js';
 
 const props = defineProps({
   texts: { type: Number, default: 0 },
@@ -106,7 +128,33 @@ const filePath = computed(() =>
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: rgba(var(--v-theme-on-surface), 0.87);
+  color: rgba(var(--v-theme-on-surface), 0.7);
+}
+
+.split-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.split-bar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.split-bar__dot--text { background: rgb(var(--v-theme-chart-text)); }
+.split-bar__dot--file { background: rgb(var(--v-theme-chart-file)); }
+
+.split-bar__count {
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  font-variant-numeric: tabular-nums;
+}
+
+.split-bar__pct {
+  color: rgba(var(--v-theme-on-surface), 0.5);
+  font-variant-numeric: tabular-nums;
 }
 
 .split-bar__svg {
@@ -119,11 +167,30 @@ const filePath = computed(() =>
   fill: rgba(var(--v-theme-on-surface), 0.08);
 }
 
+.split-bar__grad-text-top { stop-color: rgb(var(--v-theme-chart-text)); stop-opacity: 1; }
+.split-bar__grad-text-bot { stop-color: rgb(var(--v-theme-chart-text)); stop-opacity: 0.72; }
+.split-bar__grad-file-top { stop-color: rgb(var(--v-theme-chart-file)); stop-opacity: 1; }
+.split-bar__grad-file-bot { stop-color: rgb(var(--v-theme-chart-file)); stop-opacity: 0.72; }
+
 .split-bar__seg--text {
-  fill: rgb(var(--v-theme-chart-text));
+  fill: url(#split-bar-grad-text);
 }
 
 .split-bar__seg--file {
-  fill: rgb(var(--v-theme-chart-file));
+  fill: url(#split-bar-grad-file);
+}
+
+/* Sweep the ratio in from the left on reveal. */
+.split-bar__fill {
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: gd-fill-x 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 120ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split-bar__fill {
+    animation: none;
+  }
 }
 </style>

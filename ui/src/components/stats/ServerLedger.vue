@@ -23,17 +23,17 @@
     <v-divider class="server-ledger__divider" />
 
     <div class="server-ledger__grid">
-      <StatTile label="Text secrets" :value="local.texts" swatch="text" />
-      <StatTile label="Files shared" :value="local.files" swatch="file" />
-      <StatTile label="Data encrypted" :value="local.bytes" format="bytes" />
-      <StatTile label="Held right now" :value="local.active" caption="awaiting pickup" />
+      <StatTile class="gd-rise gd-rise--1" label="Text secrets" :value="local.texts" swatch="text" />
+      <StatTile class="gd-rise gd-rise--2" label="Files shared" :value="local.files" swatch="file" />
+      <StatTile class="gd-rise gd-rise--3" label="Data encrypted" :value="local.bytes" format="bytes" />
+      <StatTile class="gd-rise gd-rise--4" label="Held right now" :value="local.active" caption="awaiting pickup" live />
     </div>
 
-    <SplitBar :texts="local.texts" :files="local.files" class="server-ledger__section" />
+    <SplitBar :texts="local.texts" :files="local.files" class="server-ledger__section gd-fade-in" />
 
-    <ActivityChart :daily="local.daily" class="server-ledger__section" />
+    <ActivityChart :daily="local.daily" class="server-ledger__section gd-fade-in" />
 
-    <MilestoneMeter :total="local.total" class="server-ledger__section" />
+    <MilestoneMeter :total="local.total" class="server-ledger__section gd-fade-in" />
   </div>
 
   <!-- error/null: render nothing so the form column can center itself -->

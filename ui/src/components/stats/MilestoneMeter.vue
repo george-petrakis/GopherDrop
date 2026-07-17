@@ -1,17 +1,36 @@
 <template>
   <div class="milestone-meter">
-    <svg
-      class="milestone-meter__svg"
-      viewBox="0 0 200 8"
-      preserveAspectRatio="none"
-      role="img"
-      :aria-label="ariaLabel"
-    >
-      <path :d="trackPath" class="milestone-meter__track" />
-      <path v-if="progress > 0" :d="fillPath" class="milestone-meter__fill" />
-    </svg>
+    <div class="milestone-meter__bar">
+      <svg
+        class="milestone-meter__svg"
+        viewBox="0 0 200 8"
+        preserveAspectRatio="none"
+        role="img"
+        :aria-label="ariaLabel"
+      >
+        <defs>
+          <linearGradient id="milestone-meter-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" class="milestone-meter__grad-start" />
+            <stop offset="1" class="milestone-meter__grad-end" />
+          </linearGradient>
+        </defs>
+        <path :d="trackPath" class="milestone-meter__track" />
+        <path v-if="progress > 0" :d="fillPath" class="milestone-meter__fill" />
+      </svg>
 
-    <div class="milestone-meter__caption">{{ caption }}</div>
+      <span
+        v-if="showPip"
+        class="milestone-meter__pip"
+        :style="{ left: `${progress * 100}%` }"
+        aria-hidden="true"
+      ></span>
+    </div>
+
+    <div class="milestone-meter__scale">
+      <span class="milestone-meter__rung">{{ startLabel }}</span>
+      <span class="milestone-meter__caption">{{ caption }}</span>
+      <span class="milestone-meter__rung">{{ endLabel }}</span>
+    </div>
   </div>
 </template>
 
@@ -61,6 +80,15 @@ const caption = computed(() => {
 
 const ariaLabel = computed(() => `Milestone progress: ${caption.value}`);
 
+// Scale endpoints flanking the bar, so progress reads against a known span:
+// the last milestone cleared on the left, the one being chased on the right.
+const startLabel = computed(() => compactNumber(rungs.value.prev));
+const endLabel = computed(() => (rungs.value.maxed ? '∞' : compactNumber(rungs.value.next)));
+
+// The pip marks the current position; hide it once the bar is full (maxed) or
+// empty, where it would just sit on an endpoint.
+const showPip = computed(() => progress.value > 0 && progress.value < 1);
+
 /** Full rounded pill covering [x, x+width]. */
 function pillPath(x, width) {
   const r = Math.min(radius, width / 2, barHeight / 2);
@@ -86,7 +114,12 @@ const fillPath = computed(() => {
 .milestone-meter {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  width: 100%;
+}
+
+.milestone-meter__bar {
+  position: relative;
   width: 100%;
 }
 
@@ -96,16 +129,67 @@ const fillPath = computed(() => {
   display: block;
 }
 
+/* "You are here" node at the fill head — a bright dot with a soft primary halo,
+   revealed once the fill has swept out to it. */
+.milestone-meter__pip {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgb(var(--v-theme-primary));
+  box-shadow: 0 0 0 2px rgba(var(--v-theme-surface), 1), 0 0 10px rgba(var(--v-theme-primary), 0.7);
+  pointer-events: none;
+  animation: gd-fade-in 300ms ease-out 720ms both;
+}
+
+.milestone-meter__scale {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.milestone-meter__rung {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: rgba(var(--v-theme-on-surface), 0.45);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 .milestone-meter__track {
   fill: rgba(var(--v-theme-primary), 0.16);
 }
 
+.milestone-meter__grad-start { stop-color: rgb(var(--v-theme-primary)); stop-opacity: 0.65; }
+.milestone-meter__grad-end { stop-color: rgb(var(--v-theme-primary)); stop-opacity: 1; }
+
 .milestone-meter__fill {
-  fill: rgb(var(--v-theme-primary));
+  fill: url(#milestone-meter-grad);
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: gd-fill-x 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milestone-meter__fill {
+    animation: none;
+  }
 }
 
 .milestone-meter__caption {
   font-size: 0.75rem;
   color: rgba(var(--v-theme-on-surface), 0.6);
+  text-align: center;
+  flex: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milestone-meter__pip {
+    animation: none;
+  }
 }
 </style>
