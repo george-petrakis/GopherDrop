@@ -95,6 +95,40 @@ a:hover {
     animation: gd-fade-in 300ms ease-out both;
 }
 
+/* Ledger reveal vocabulary — a small kit the stat components share so the
+   whole right column materializes as one orchestrated sequence rather than a
+   pile of independent effects. */
+
+/* Bars rising from the baseline (scaled from their own bottom edge). */
+@keyframes gd-bar-grow {
+    from { transform: scaleY(0); opacity: 0; }
+    to { transform: scaleY(1); opacity: 1; }
+}
+
+/* Meters / split bars sweeping in from the left. */
+@keyframes gd-fill-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+/* A light sweep travelling across a progress fill, so momentum reads as
+   ongoing rather than finished. */
+@keyframes gd-shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(220%); }
+}
+
+/* The "held right now" pulse — a slow breathing ring, not a blink. */
+@keyframes gd-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.55); opacity: 0.25; }
+}
+
+.gd-rise--1 { animation-delay: 60ms; }
+.gd-rise--2 { animation-delay: 120ms; }
+.gd-rise--3 { animation-delay: 180ms; }
+.gd-rise--4 { animation-delay: 240ms; }
+
 @media (prefers-reduced-motion: reduce) {
     .animate__animated,
     .gd-rise,

@@ -12,6 +12,17 @@
       role="img"
       :aria-label="`Text ${textPercent}%, Files ${filePercent}%`"
     >
+      <defs>
+        <linearGradient id="split-bar-grad-text" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="split-bar__grad-text-top" />
+          <stop offset="1" class="split-bar__grad-text-bot" />
+        </linearGradient>
+        <linearGradient id="split-bar-grad-file" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="split-bar__grad-file-top" />
+          <stop offset="1" class="split-bar__grad-file-bot" />
+        </linearGradient>
+      </defs>
+
       <rect
         v-if="total === 0"
         x="0"
@@ -21,7 +32,7 @@
         rx="6"
         class="split-bar__track"
       />
-      <template v-else>
+      <g v-else class="split-bar__fill">
         <path
           v-if="textWidth > 0"
           :d="textPath"
@@ -32,7 +43,7 @@
           :d="filePath"
           class="split-bar__seg split-bar__seg--file"
         />
-      </template>
+      </g>
     </svg>
   </div>
 </template>
@@ -119,11 +130,30 @@ const filePath = computed(() =>
   fill: rgba(var(--v-theme-on-surface), 0.08);
 }
 
+.split-bar__grad-text-top { stop-color: rgb(var(--v-theme-chart-text)); stop-opacity: 1; }
+.split-bar__grad-text-bot { stop-color: rgb(var(--v-theme-chart-text)); stop-opacity: 0.72; }
+.split-bar__grad-file-top { stop-color: rgb(var(--v-theme-chart-file)); stop-opacity: 1; }
+.split-bar__grad-file-bot { stop-color: rgb(var(--v-theme-chart-file)); stop-opacity: 0.72; }
+
 .split-bar__seg--text {
-  fill: rgb(var(--v-theme-chart-text));
+  fill: url(#split-bar-grad-text);
 }
 
 .split-bar__seg--file {
-  fill: rgb(var(--v-theme-chart-file));
+  fill: url(#split-bar-grad-file);
+}
+
+/* Sweep the ratio in from the left on reveal. */
+.split-bar__fill {
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: gd-fill-x 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 120ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split-bar__fill {
+    animation: none;
+  }
 }
 </style>

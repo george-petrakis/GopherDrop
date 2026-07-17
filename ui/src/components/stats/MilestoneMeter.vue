@@ -7,6 +7,12 @@
       role="img"
       :aria-label="ariaLabel"
     >
+      <defs>
+        <linearGradient id="milestone-meter-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" class="milestone-meter__grad-start" />
+          <stop offset="1" class="milestone-meter__grad-end" />
+        </linearGradient>
+      </defs>
       <path :d="trackPath" class="milestone-meter__track" />
       <path v-if="progress > 0" :d="fillPath" class="milestone-meter__fill" />
     </svg>
@@ -100,8 +106,21 @@ const fillPath = computed(() => {
   fill: rgba(var(--v-theme-primary), 0.16);
 }
 
+.milestone-meter__grad-start { stop-color: rgb(var(--v-theme-primary)); stop-opacity: 0.65; }
+.milestone-meter__grad-end { stop-color: rgb(var(--v-theme-primary)); stop-opacity: 1; }
+
 .milestone-meter__fill {
-  fill: rgb(var(--v-theme-primary));
+  fill: url(#milestone-meter-grad);
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: gd-fill-x 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milestone-meter__fill {
+    animation: none;
+  }
 }
 
 .milestone-meter__caption {

@@ -279,6 +279,17 @@ async function handleSubmit() {
   line-height: 1.2;
   text-align: left;
   margin: 0;
+  /* The word itself carries the brand: on-surface ink drifting into primary,
+     so "secret" is where the purple lands. */
+  background: linear-gradient(
+    100deg,
+    rgb(var(--v-theme-on-surface)) 35%,
+    rgb(var(--v-theme-primary)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 @media (min-width: 960px) {
@@ -344,9 +355,13 @@ async function handleSubmit() {
   box-shadow: none;
 }
 
+.gd-secret-well :deep(.v-field) {
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
 .gd-secret-well :deep(.v-field.v-field--focused) {
   border: 1.5px solid rgb(var(--v-theme-primary));
-  box-shadow: none;
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.12);
 }
 
 .gd-secret-well :deep(textarea) {
@@ -402,5 +417,26 @@ async function handleSubmit() {
 .create-page__submit {
   margin-top: 24px;
   border-radius: 10px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.create-page__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(var(--v-theme-primary), 0.32);
+}
+
+.create-page__submit:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .create-page__submit {
+    transition: none;
+  }
+  .create-page__submit:hover,
+  .create-page__submit:active {
+    transform: none;
+  }
 }
 </style>

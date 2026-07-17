@@ -7,6 +7,17 @@
       role="img"
       :aria-label="ariaLabel"
     >
+      <defs>
+        <linearGradient :id="gradTextId" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="activity-chart__grad-text-top" />
+          <stop offset="1" class="activity-chart__grad-text-bot" />
+        </linearGradient>
+        <linearGradient :id="gradFileId" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" class="activity-chart__grad-file-top" />
+          <stop offset="1" class="activity-chart__grad-file-bot" />
+        </linearGradient>
+      </defs>
+
       <!-- gridlines -->
       <g class="activity-chart__grid">
         <line
@@ -30,37 +41,43 @@
 
       <!-- columns -->
       <g v-for="(day, i) in daily" :key="day.date || i">
-        <template v-if="!isEmpty">
+        <g
+          class="activity-chart__col"
+          :class="{ 'activity-chart__col--hover': hoveredIndex === i }"
+          :style="colStyle(i)"
+        >
+          <template v-if="!isEmpty">
+            <path
+              v-if="segmentHeight(day, 'files') > 0"
+              :d="topRectPath(
+                slotX(i) + colOffset(i),
+                yForValue(day.texts || 0) - segmentHeight(day, 'files') - (segmentHeight(day, 'texts') > 0 ? gap : 0),
+                colWidth(i),
+                segmentHeight(day, 'files'),
+                4
+              )"
+              class="activity-chart__seg activity-chart__seg--file"
+              :class="{ 'activity-chart__seg--hover': hoveredIndex === i }"
+            />
+            <path
+              v-if="segmentHeight(day, 'texts') > 0"
+              :d="topRectPath(
+                slotX(i) + colOffset(i),
+                baselineY - segmentHeight(day, 'texts'),
+                colWidth(i),
+                segmentHeight(day, 'texts'),
+                segmentHeight(day, 'files') > 0 ? 0 : 4
+              )"
+              class="activity-chart__seg activity-chart__seg--text"
+              :class="{ 'activity-chart__seg--hover': hoveredIndex === i }"
+            />
+          </template>
           <path
-            v-if="segmentHeight(day, 'files') > 0"
-            :d="topRectPath(
-              slotX(i) + colOffset(i),
-              yForValue(day.texts || 0) - segmentHeight(day, 'files') - (segmentHeight(day, 'texts') > 0 ? gap : 0),
-              colWidth(i),
-              segmentHeight(day, 'files'),
-              4
-            )"
-            class="activity-chart__seg activity-chart__seg--file"
-            :class="{ 'activity-chart__seg--hover': hoveredIndex === i }"
+            v-else
+            :d="topRectPath(slotX(i) + colOffset(i), baselineY - ghostHeight(i), colWidth(i), ghostHeight(i), 4)"
+            class="activity-chart__seg activity-chart__seg--ghost"
           />
-          <path
-            v-if="segmentHeight(day, 'texts') > 0"
-            :d="topRectPath(
-              slotX(i) + colOffset(i),
-              baselineY - segmentHeight(day, 'texts'),
-              colWidth(i),
-              segmentHeight(day, 'texts'),
-              segmentHeight(day, 'files') > 0 ? 0 : 4
-            )"
-            class="activity-chart__seg activity-chart__seg--text"
-            :class="{ 'activity-chart__seg--hover': hoveredIndex === i }"
-          />
-        </template>
-        <path
-          v-else
-          :d="topRectPath(slotX(i) + colOffset(i), baselineY - ghostHeight(i), colWidth(i), ghostHeight(i), 4)"
-          class="activity-chart__seg activity-chart__seg--ghost"
-        />
+        </g>
 
         <!-- hit target: full slot band, full plot height -->
         <rect
@@ -101,6 +118,16 @@ const props = defineProps({
 
 const wrapRef = ref(null);
 const hoveredIndex = ref(null);
+
+// Namespaced gradient ids so the defs never clash with anything else on the page.
+const gradTextId = 'activity-chart-grad-text';
+const gradFileId = 'activity-chart-grad-file';
+
+// Staggered rise: each column starts a beat after the previous so the row
+// unfurls left-to-right. Capped so a long history never drags the reveal out.
+function colStyle(i) {
+  return { animationDelay: `${Math.min(i * 22, 420)}ms` };
+}
 
 const viewBoxWidth = 600;
 const viewBoxHeight = 150;
@@ -267,12 +294,20 @@ const tooltipStyle = computed(() => {
   fill: rgba(var(--v-theme-on-surface), 0.5);
 }
 
+/* Vertical gradients: saturated at the top edge, softening toward the
+   baseline so each bar reads as rising out of the ground. Theme-driven, so
+   they flip with light/dark automatically. */
+.activity-chart__grad-text-top { stop-color: rgb(var(--v-theme-chart-text)); stop-opacity: 1; }
+.activity-chart__grad-text-bot { stop-color: rgb(var(--v-theme-chart-text)); stop-opacity: 0.5; }
+.activity-chart__grad-file-top { stop-color: rgb(var(--v-theme-chart-file)); stop-opacity: 1; }
+.activity-chart__grad-file-bot { stop-color: rgb(var(--v-theme-chart-file)); stop-opacity: 0.5; }
+
 .activity-chart__seg--text {
-  fill: rgb(var(--v-theme-chart-text));
+  fill: url(#activity-chart-grad-text);
 }
 
 .activity-chart__seg--file {
-  fill: rgb(var(--v-theme-chart-file));
+  fill: url(#activity-chart-grad-file);
 }
 
 .activity-chart__seg--ghost {
@@ -284,7 +319,20 @@ const tooltipStyle = computed(() => {
 }
 
 .activity-chart__seg--hover {
-  opacity: 0.85;
+  opacity: 1;
+}
+
+/* Each column grows up from the baseline; the per-column delay is set inline
+   so the row unfurls left-to-right. transform-box keeps the origin pinned to
+   the group's own bottom edge regardless of the non-uniform viewBox scaling. */
+.activity-chart__col {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: gd-bar-grow 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.activity-chart__col--hover {
+  filter: drop-shadow(0 0 5px rgba(var(--v-theme-chart-text), 0.45));
 }
 
 .activity-chart__hit {
@@ -322,6 +370,9 @@ const tooltipStyle = computed(() => {
 @media (prefers-reduced-motion: reduce) {
   .activity-chart__seg {
     transition: none;
+  }
+  .activity-chart__col {
+    animation: none;
   }
 }
 </style>

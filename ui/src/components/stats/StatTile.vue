@@ -7,6 +7,11 @@
         :class="`stat-tile__swatch--${swatch}`"
         aria-hidden="true"
       />
+      <span
+        v-if="live"
+        class="stat-tile__live"
+        aria-hidden="true"
+      />
       <span class="stat-tile__label">{{ label }}</span>
     </div>
 
@@ -32,6 +37,7 @@ const props = defineProps({
   caption: { type: String, default: null },
   hero: { type: Boolean, default: false },
   swatch: { type: String, default: null }, // "text" | "file" | null
+  live: { type: Boolean, default: false }, // renders a breathing "live" dot
   format: { type: String, default: 'number' }, // "number" | "bytes"
 });
 
@@ -70,6 +76,33 @@ const displayValue = computed(() => {
 
 .stat-tile__swatch--file {
   background-color: rgb(var(--v-theme-chart-file));
+}
+
+/* Live indicator: a solid dot wrapped in a slow breathing ring, marking a
+   figure that reflects what the server is holding at this very moment. */
+.stat-tile__live {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: rgb(var(--v-theme-chart-file));
+}
+
+.stat-tile__live::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: rgb(var(--v-theme-chart-file));
+  animation: gd-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-tile__live::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 .stat-tile__label {
