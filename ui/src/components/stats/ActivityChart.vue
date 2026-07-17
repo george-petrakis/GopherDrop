@@ -1,5 +1,11 @@
 <template>
   <div class="activity-chart" ref="wrapRef">
+    <div class="activity-chart__header">
+      <span class="activity-chart__title gd-eyebrow">Daily activity</span>
+      <span class="activity-chart__summary">{{ summaryText }}</span>
+    </div>
+
+    <div class="activity-chart__plot">
     <svg
       class="activity-chart__svg"
       :viewBox="`0 0 ${viewBoxWidth} ${viewBoxHeight}`"
@@ -43,7 +49,10 @@
       <g v-for="(day, i) in daily" :key="day.date || i">
         <g
           class="activity-chart__col"
-          :class="{ 'activity-chart__col--hover': hoveredIndex === i }"
+          :class="{
+            'activity-chart__col--hover': hoveredIndex === i,
+            'activity-chart__col--today': i === daily.length - 1 && !isEmpty,
+          }"
           :style="colStyle(i)"
         >
           <template v-if="!isEmpty">
@@ -94,7 +103,28 @@
           @blur="hoveredIndex = null"
         />
       </g>
+
+      <!-- 7-day momentum: a trailing average riding over the bars, so a run
+           of busy days reads as a rising trend and not just tall columns.
+           pathLength normalizes the length so the draw-in works regardless of
+           how many days are plotted. -->
+      <path
+        v-if="showTrend"
+        :d="trendPath"
+        class="activity-chart__trend"
+        pathLength="1"
+        fill="none"
+      />
     </svg>
+
+    <!-- "Now" marker for the trend, as HTML so the non-uniform viewBox scaling
+         can't squash it into an ellipse. -->
+    <div
+      v-if="showTrend"
+      class="activity-chart__trend-head"
+      :style="trendHeadStyle"
+      aria-hidden="true"
+    />
 
     <div
       v-if="hoveredIndex !== null"
@@ -102,6 +132,12 @@
       :style="tooltipStyle"
     >
       {{ dayTooltip(daily[hoveredIndex]) }}
+    </div>
+    </div>
+
+    <div v-if="!isEmpty" class="activity-chart__axis">
+      <span>{{ firstDateLabel }}</span>
+      <span class="activity-chart__axis-today">Today</span>
     </div>
 
     <div v-if="isEmpty" class="activity-chart__caption">Activity will appear here</div>
@@ -262,10 +298,115 @@ const tooltipStyle = computed(() => {
     top: `${(topPad / viewBoxHeight) * 100}%`,
   };
 });
+
+/* ---- Period summary + momentum trend ---- */
+
+const dayTotals = computed(() =>
+  props.daily.map((d) => (Number(d?.texts) || 0) + (Number(d?.files) || 0))
+);
+
+const peak = computed(() => {
+  let value = 0;
+  let index = -1;
+  dayTotals.value.forEach((total, i) => {
+    if (total > value) {
+      value = total;
+      index = i;
+    }
+  });
+  return { value, index };
+});
+
+// One-line context so the chart states what it's showing rather than leaving
+// the reader to eyeball it: the period's volume and its busiest day.
+const summaryText = computed(() => {
+  if (isEmpty.value) return 'No drops yet';
+  const total = totals.value.all;
+  const noun = total === 1 ? 'secret' : 'secrets';
+  const peakDay = formatShortDate(props.daily[peak.value.index]?.date);
+  return `${compactNumber(total)} ${noun} · peak ${peak.value.value}${peakDay ? ` on ${peakDay}` : ''}`;
+});
+
+// Trailing average (up to a 7-day window) sampled at each day's centre. Riding
+// it over the raw bars turns a cluster of busy days into a visible upswing.
+const trendPoints = computed(() => {
+  const totalsArr = dayTotals.value;
+  const n = totalsArr.length;
+  if (n === 0) return [];
+  const window = Math.min(7, n);
+  const points = [];
+  for (let i = 0; i < n; i += 1) {
+    let sum = 0;
+    let count = 0;
+    for (let j = Math.max(0, i - window + 1); j <= i; j += 1) {
+      sum += totalsArr[j];
+      count += 1;
+    }
+    const avg = count > 0 ? sum / count : 0;
+    points.push({ x: slotX(i) + slotWidth.value / 2, y: yForValue(avg) });
+  }
+  return points;
+});
+
+// Needs at least a few days of real activity to mean anything.
+const showTrend = computed(() => !isEmpty.value && trendPoints.value.length >= 3);
+
+// Smooth cubic through the points with horizontal tangents at each node — a
+// calm curve that reads as a trend line, not a jagged connect-the-dots.
+const trendPath = computed(() => {
+  const pts = trendPoints.value;
+  if (pts.length < 2) return '';
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for (let i = 1; i < pts.length; i += 1) {
+    const midX = (pts[i - 1].x + pts[i].x) / 2;
+    d += ` C${midX},${pts[i - 1].y} ${midX},${pts[i].y} ${pts[i].x},${pts[i].y}`;
+  }
+  return d;
+});
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = String(dateStr).split('-').map(Number);
+  if (!y || !m || !d) return '';
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+const firstDateLabel = computed(() => formatShortDate(props.daily[0]?.date));
+
+const trendHeadStyle = computed(() => {
+  const pts = trendPoints.value;
+  if (!pts.length) return {};
+  const last = pts[pts.length - 1];
+  return {
+    left: `${(last.x / viewBoxWidth) * 100}%`,
+    top: `${(last.y / viewBoxHeight) * 100}%`,
+  };
+});
 </script>
 
 <style scoped>
 .activity-chart {
+  position: relative;
+  width: 100%;
+}
+
+.activity-chart__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.activity-chart__summary {
+  font-size: 0.75rem;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.activity-chart__plot {
   position: relative;
   width: 100%;
 }
@@ -335,6 +476,41 @@ const tooltipStyle = computed(() => {
   filter: drop-shadow(0 0 5px rgba(var(--v-theme-chart-text), 0.45));
 }
 
+/* Today reads as "live": a gentle standing glow, so the most recent day is
+   findable at a glance without a hard outline. */
+.activity-chart__col--today {
+  filter: drop-shadow(0 0 4px rgba(var(--v-theme-on-surface), 0.28));
+}
+
+/* Momentum line: a calm near-neutral stroke that sits above the coloured bars
+   as an analytical overlay, drawing itself in left-to-right after the bars. */
+.activity-chart__trend {
+  stroke: rgba(var(--v-theme-on-surface), 0.6);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: gd-draw 900ms ease-out 260ms forwards;
+}
+
+@keyframes gd-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.activity-chart__trend-head {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: rgb(var(--v-theme-on-surface));
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-surface), 1), 0 0 8px rgba(var(--v-theme-on-surface), 0.5);
+  pointer-events: none;
+  animation: gd-fade-in 300ms ease-out 1100ms both;
+}
+
 .activity-chart__hit {
   fill: transparent;
   cursor: pointer;
@@ -367,11 +543,33 @@ const tooltipStyle = computed(() => {
   margin-top: 4px;
 }
 
+.activity-chart__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 0 2px;
+  font-size: 0.6875rem;
+  color: rgba(var(--v-theme-on-surface), 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-chart__axis-today {
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  font-weight: 600;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .activity-chart__seg {
     transition: none;
   }
   .activity-chart__col {
+    animation: none;
+  }
+  .activity-chart__trend {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .activity-chart__trend-head {
     animation: none;
   }
 }

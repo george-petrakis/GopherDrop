@@ -1,8 +1,18 @@
 <template>
   <div class="split-bar">
     <div class="split-bar__labels">
-      <span class="split-bar__label">Text {{ textPercent }}%</span>
-      <span class="split-bar__label">Files {{ filePercent }}%</span>
+      <span class="split-bar__label">
+        <span class="split-bar__dot split-bar__dot--text" aria-hidden="true"></span>
+        Text
+        <span class="split-bar__count">{{ compactNumber(texts) }}</span>
+        <span class="split-bar__pct">{{ textPercent }}%</span>
+      </span>
+      <span class="split-bar__label">
+        <span class="split-bar__pct">{{ filePercent }}%</span>
+        <span class="split-bar__count">{{ compactNumber(files) }}</span>
+        Files
+        <span class="split-bar__dot split-bar__dot--file" aria-hidden="true"></span>
+      </span>
     </div>
 
     <svg
@@ -50,6 +60,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { compactNumber } from '../../utils/format.js';
 
 const props = defineProps({
   texts: { type: Number, default: 0 },
@@ -117,7 +128,33 @@ const filePath = computed(() =>
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: rgba(var(--v-theme-on-surface), 0.87);
+  color: rgba(var(--v-theme-on-surface), 0.7);
+}
+
+.split-bar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.split-bar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.split-bar__dot--text { background: rgb(var(--v-theme-chart-text)); }
+.split-bar__dot--file { background: rgb(var(--v-theme-chart-file)); }
+
+.split-bar__count {
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  font-variant-numeric: tabular-nums;
+}
+
+.split-bar__pct {
+  color: rgba(var(--v-theme-on-surface), 0.5);
+  font-variant-numeric: tabular-nums;
 }
 
 .split-bar__svg {
