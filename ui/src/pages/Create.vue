@@ -353,6 +353,16 @@ async function handleSubmit() {
   padding: 12px;
 }
 
+/* Vuetify fades the top of a textarea with a mask so scrolled content slips
+   under a floating label. This well has no label (placeholder only), and the
+   mask's fade zone (~14–24px on the default density) sits right where our 12px
+   padding places the first line — cropping its top. Drop the mask so text
+   renders in full. */
+.gd-secret-well :deep(textarea.v-field__input) {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 .gd-file-well :deep(.v-field__input) {
   align-items: center;
 }
