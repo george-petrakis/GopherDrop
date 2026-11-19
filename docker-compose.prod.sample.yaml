@@ -17,7 +17,7 @@ services:
       - gophernet
 
   app:
-    image: petrakisg/gopherdrop:1.0.4
+    image: petrakisg/gopherdrop:1.2.1
     container_name: gopherdrop_app
     environment:
       DB_HOST: db
